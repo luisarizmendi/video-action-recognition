@@ -1,0 +1,29 @@
+[Unit]
+Description=Aggression Detector — Tier 1 gate, MoViNet A0, High/Suspicious/Low
+After=inference-onnx.service clip-recorder.service
+Requires=inference-onnx.service clip-recorder.service
+
+[Container]
+Image=quay.io/CHANGEME/video-action-recognition-aggression-detector:latest
+ContainerName=aggression-detector
+
+Network=host
+SecurityLabelDisable=true
+
+Environment=ZMQ_SUB_HOST=localhost
+Environment=ZMQ_SUB_PORT=5555
+Environment=RECORDER_URL=http://localhost:8082
+Environment=PUBLISHER_URL=http://localhost:8083
+Environment=THRESHOLD_HIGH=0.85
+Environment=THRESHOLD_SUSPICIOUS=0.50
+Environment=GATE_PERSONS_MIN=2
+Environment=COOLDOWN_S=30
+
+PublishPort=8081:8080
+
+[Service]
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,7 @@
+FROM registry.access.redhat.com/ubi9/python-311:latest
+WORKDIR /opt/app-root/src
+RUN pip install --no-cache-dir fastapi==0.115.6 uvicorn==0.34.0 requests==2.32.3 pyzmq==26.2.0 pydantic==2.10.4
+COPY src/ ./src/
+ENV PYTHONPATH=/opt/app-root/src/src
+EXPOSE 8080
+CMD ["uvicorn", "detector.main:app", "--host", "0.0.0.0", "--port", "8080"]

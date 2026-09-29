@@ -1,0 +1,33 @@
+ARG BASE=nvcr.io/nvidia/cuda:12.4.1-cudnn-runtime-ubi9
+FROM ${BASE}
+
+RUN dnf install -y \
+        python3 \
+        python3-pip \
+        mesa-libGL \
+        glib2 \
+    && dnf clean all
+
+RUN python3 -m pip install --upgrade pip
+
+
+#####
+##### No package for gpu in aarch64
+#####
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+        ONNXRUNTIME_PKG=onnxruntime; \
+    else \
+        ONNXRUNTIME_PKG=onnxruntime-gpu; \
+    fi && \
+    pip install --no-cache-dir \
+        ${ONNXRUNTIME_PKG} \
+        opencv-python-headless \
+        pyzmq \
+        numpy
+
+WORKDIR /app
+COPY inference.py shm_frame.py ./
+
+RUN mkdir -p /opt/models
+
+CMD ["python3", "-u", "inference.py"]

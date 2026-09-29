@@ -1,0 +1,7 @@
+FROM registry.access.redhat.com/ubi9/python-311:latest
+WORKDIR /opt/app-root/src
+RUN pip install --no-cache-dir requests==2.32.3 pyzmq==26.2.0
+COPY src/ ./src/
+ENV PYTHONPATH=/opt/app-root/src/src
+EXPOSE 8080
+CMD ["python", "-m", "analytics.main"]

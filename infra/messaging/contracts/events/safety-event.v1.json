@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SafetyEvent v1",
+  "description": "Published by the edge event-publisher to topic bus.safety.events. Evidence video is NOT in the message. It is uploaded to S4 first and referenced here (claim check pattern).",
+  "type": "object",
+  "required": ["schema_version", "event_id", "event_type", "severity", "bus_id", "camera_id", "detected_at", "score"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "format": "uuid", "description": "Also the dedupe key for consumers"},
+    "event_type": {"const": "aggression"},
+    "severity": {"enum": ["high", "suspicious"]},
+    "bus_id": {"type": "string"},
+    "camera_id": {"type": "string"},
+    "detected_at": {"type": "string", "format": "date-time"},
+    "score": {"type": "number", "minimum": 0, "maximum": 1},
+    "tier1": {
+      "type": "object",
+      "properties": {"motion_score": {"type": "number"}, "persons": {"type": "integer"}}
+    },
+    "classifier": {
+      "type": "object",
+      "properties": {"name": {"type": "string"}, "version": {"type": "string"}}
+    },
+    "evidence": {
+      "type": ["object", "null"],
+      "required": ["bucket", "key"],
+      "properties": {
+        "bucket": {"type": "string"},
+        "key": {"type": "string"},
+        "content_type": {"type": "string"},
+        "sha256": {"type": "string"},
+        "size_bytes": {"type": "integer"}
+      }
+    }
+  }
+}

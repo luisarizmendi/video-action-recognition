@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: video-detector-config}
+data:
+  SOURCE_MODE: usb   # or rtsp — set RTSP_URL below if so
+  RTSP_URL: ""
+  KAFKA_BOOTSTRAP: bus-kafka-kafka-external-bootstrap-bus-streams.apps.CHANGEME.example.com:443
+  S3_ENDPOINT: https://s4-bus-s4.apps.CHANGEME.example.com
+  S3_BUCKET: bus-evidence

@@ -1,0 +1,42 @@
+# ~/.config/containers/systemd/inference-tensorrt-jetson.container
+#
+# TensorRT inference for NVIDIA Jetson (JetPack 6.x, aarch64).
+# Uses the L4T TensorRT base — optimised for Tegra SoC (Orin NX / AGX / Nano Super).
+#
+# Bundled model is converted to a .engine on first start (~5 min on Jetson).
+# The volume below persists the engine so subsequent starts are instant.
+
+[Unit]
+Description=TensorRT Inference (Jetson) — SHM frames → ZeroMQ detections
+After=camera-capture.service
+Requires=camera-capture.service
+
+[Container]
+Image=quay.io/CHANGEME/video-action-recognition-inference-tensorrt-jetson:latest
+ContainerName=inference-tensorrt-jetson
+PodmanArgs=--group-add=keep-groups
+
+Volume=/dev/shm:/dev/shm
+Volume=/var/home/detector/models:/opt/models
+
+AddDevice=nvidia.com/gpu=all
+Network=host
+SecurityLabelDisable=true
+
+Environment=SHM_FRAME_NAME=camera_frame
+Environment=ZMQ_PUB_PORT=5555
+Environment=ZMQ_TOPIC=detections
+Environment=INFERENCE_MODEL=model.onnx
+Environment=MODELS_DIR=/opt/models
+Environment=CONFIDENCE_THRESH=0.4
+Environment=TARGET_FPS=30
+Environment=TRT_FP16=1
+Environment=LOG_LEVEL=INFO
+
+[Service]
+Restart=always
+RestartSec=5
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

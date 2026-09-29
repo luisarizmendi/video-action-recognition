@@ -1,0 +1,26 @@
+[Unit]
+Description=Passenger Analytics — centroid tracker, boarding/alighting counts
+After=inference-tensorrt-jetson.service
+Requires=inference-tensorrt-jetson.service
+
+[Container]
+Image=quay.io/CHANGEME/video-action-recognition-passenger-analytics:latest
+ContainerName=passenger-analytics
+
+Network=host
+SecurityLabelDisable=true
+
+Environment=ZMQ_SUB_HOST=localhost
+Environment=ZMQ_SUB_PORT=5555
+Environment=CAMERA_ID=door-1
+Environment=PUBLISHER_URL=http://localhost:8083
+Environment=WINDOW_S=60
+Environment=LINE_Y=0.5
+Environment=LINE_DIRECTION=down
+
+[Service]
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

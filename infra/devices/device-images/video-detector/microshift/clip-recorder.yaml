@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: clip-recorder}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: clip-recorder}}
+  template:
+    metadata: {labels: {app: clip-recorder}}
+    spec:
+      containers:
+        - name: clip-recorder
+          image: clip-recorder
+          env:
+            - {name: SHM_FRAME_NAME, value: camera_frame}
+            - {name: CLIP_DIR, value: /clips}
+            - {name: CALLBACK_URL, value: "http://aggression-detector:8080/v1/clip-ready"}
+          ports: [{containerPort: 8080}]
+          volumeMounts:
+            - {name: shm, mountPath: /dev/shm}
+            - {name: clips, mountPath: /clips}
+      volumes:
+        # hostPath, not emptyDir: this must be the SAME /dev/shm the other
+        # pods use, and emptyDir would give each pod its own private tmpfs.
+        # Only safe because this is a single-node edge device.
+        - name: shm
+          hostPath: {path: /dev/shm, type: Directory}
+        - name: clips
+          persistentVolumeClaim: {claimName: clips}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: clip-recorder}
+spec: {selector: {app: clip-recorder}, ports: [{port: 8080, targetPort: 8080}]}

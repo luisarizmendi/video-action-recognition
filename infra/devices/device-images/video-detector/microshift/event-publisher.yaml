@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: event-publisher}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: event-publisher}}
+  template:
+    metadata: {labels: {app: event-publisher}}
+    spec:
+      containers:
+        - name: event-publisher
+          image: event-publisher
+          envFrom: [{configMapRef: {name: video-detector-config}}]
+          env: [{name: OUTBOX_PATH, value: /var/lib/outbox/outbox.db}]
+          ports: [{containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /healthz, port: 8080}}
+          volumeMounts:
+            - {name: outbox, mountPath: /var/lib/outbox}
+            - {name: clips, mountPath: /clips}
+            - {name: bus-env, mountPath: /etc/bus-edge, readOnly: true}
+      volumes:
+        - name: outbox
+          persistentVolumeClaim: {claimName: outbox}
+        - name: clips
+          persistentVolumeClaim: {claimName: clips}
+        - name: bus-env
+          hostPath: {path: /etc/video-action-recognition, type: DirectoryOrCreate}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: event-publisher}
+spec: {selector: {app: event-publisher}, ports: [{port: 8080, targetPort: 8080}]}

@@ -1,0 +1,99 @@
+name: build-images
+on:
+  push:
+    branches: [main]
+    paths: ["services/**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # Services that make sense to run on either CPU architecture: build multi-arch.
+  build-multiarch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: camera-capture, path: services/camera-capture}
+          - {name: inference-onnx, path: services/inference-onnx}
+          - {name: stream-viewer, path: services/stream-viewer}
+          - {name: clip-recorder, path: services/clip-recorder}
+          - {name: aggression-detector, path: services/aggression-detector}
+          - {name: passenger-analytics, path: services/passenger-analytics}
+          - {name: event-publisher, path: services/event-publisher}
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "REPO=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.path }}
+          file: ${{ matrix.path }}/Containerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPO }}/${{ matrix.name }}:latest
+            ghcr.io/${{ env.REPO }}/${{ matrix.name }}:${{ github.sha }}
+
+  # x86_64-only: desktop/server NVIDIA GPU image.
+  build-tensorrt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "REPO=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      - uses: docker/build-push-action@v6
+        with:
+          context: services/inference-tensorrt
+          file: services/inference-tensorrt/Containerfile
+          push: true
+          tags: ghcr.io/${{ env.REPO }}/inference-tensorrt:latest
+
+  # Jetson (aarch64-only, needs QEMU emulation from an x86_64 runner or an
+  # arm64 self-hosted runner; QEMU works but is slow, prefer a real runner
+  # if you build this often).
+  build-tensorrt-jetson:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "REPO=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/login-action@v3
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      - uses: docker/build-push-action@v6
+        with:
+          context: services/inference-tensorrt-jetson
+          file: services/inference-tensorrt-jetson/Containerfile
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/${{ env.REPO }}/inference-tensorrt-jetson:latest
+
+  # Datacenter-only, amd64.
+  build-datacenter:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: alert-service, path: services/alert-service}
+          - {name: ops-dashboard, path: services/ops-dashboard}
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "REPO=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.path }}
+          file: ${{ matrix.path }}/Containerfile
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPO }}/${{ matrix.name }}:latest
+            ghcr.io/${{ env.REPO }}/${{ matrix.name }}:${{ github.sha }}

@@ -1,0 +1,46 @@
+# AMQ Streams (Red Hat Streams for Apache Kafka). KRaft mode with node pools.
+# If your operator version uses a newer API version, adjust apiVersion.
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: dual-role
+  labels: {strimzi.io/cluster: bus-kafka}
+spec:
+  replicas: 3
+  roles: [controller, broker]
+  storage:
+    type: jbod
+    volumes:
+      - {id: 0, type: persistent-claim, size: 20Gi, deleteClaim: false}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: bus-kafka
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+spec:
+  kafka:
+    authorization: {type: simple}
+    listeners:
+      - name: internal
+        port: 9093
+        type: internal
+        tls: true
+        authentication: {type: scram-sha-512}
+      # The buses connect here. A Route gives one TLS endpoint on port 443 through the OpenShift router.
+      - name: external
+        port: 9094
+        type: route
+        tls: true
+        authentication: {type: scram-sha-512}
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      default.replication.factor: 3
+      min.insync.replicas: 2
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

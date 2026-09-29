@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: camera-capture}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector: {matchLabels: {app: camera-capture}}
+  template:
+    metadata: {labels: {app: camera-capture}}
+    spec:
+      containers:
+        - name: camera-capture
+          image: camera-capture
+          envFrom: [{configMapRef: {name: video-detector-config}}]
+          env: [{name: SHM_FRAME_NAME, value: camera_frame}]
+          volumeMounts: [{name: shm, mountPath: /dev/shm}]
+          securityContext: {privileged: true}   # needs /dev/video* on the host
+      volumes:
+        # hostPath, not emptyDir: this must be the SAME /dev/shm the other
+        # pods use, and emptyDir would give each pod its own private tmpfs.
+        # Only safe because this is a single-node edge device.
+        - name: shm
+          hostPath: {path: /dev/shm, type: Directory}

@@ -1,0 +1,18 @@
+# OpenShift GitOps root applications. CHANGEME: repoURL.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: {name: video-detection-streams, namespace: openshift-gitops}
+spec:
+  project: default
+  source: {repoURL: "https://github.com/CHANGEME/video-action-recognition.git", targetRevision: main, path: infra/messaging}
+  destination: {server: "https://kubernetes.default.svc", namespace: bus-streams}
+  syncPolicy: {automated: {prune: true, selfHeal: true}, syncOptions: [CreateNamespace=true]}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: {name: video-detection-apps, namespace: openshift-gitops}
+spec:
+  project: default
+  source: {repoURL: "https://github.com/CHANGEME/video-action-recognition.git", targetRevision: main, path: infra/apps}
+  destination: {server: "https://kubernetes.default.svc", namespace: video-detection-dc}
+  syncPolicy: {automated: {prune: true, selfHeal: true}, syncOptions: [CreateNamespace=true]}

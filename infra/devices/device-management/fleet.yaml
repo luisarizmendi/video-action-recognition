@@ -1,0 +1,54 @@
+# Red Hat Edge Manager (Flight Control) resources. Check fields against your
+# installed version. This enrolls video-detector devices and rolls out the
+# bootc OS image built from ../device-images/video-detector/Containerfile
+# (or video-detector-jetson/Containerfile for Jetson devices).
+apiVersion: flightctl.io/v1alpha1
+kind: Repository
+metadata: {name: video-action-recognition-git}
+spec:
+  type: git
+  url: https://github.com/CHANGEME/video-action-recognition.git
+---
+apiVersion: flightctl.io/v1alpha1
+kind: Fleet
+metadata: {name: video-detector-x86}
+spec:
+  selector:
+    matchLabels: {fleet: video-detector, arch: amd64}
+  template:
+    spec:
+      os:
+        image: quay.io/CHANGEME/video-action-recognition-os:latest
+      config:
+        - name: device-identity
+          inline:
+            - path: /etc/video-action-recognition/bus.env
+              content: |
+                BUS_ID={{ .metadata.name }}
+                KAFKA_USERNAME=edge-publisher
+                KAFKA_PASSWORD=CHANGEME
+                KAFKA_CA_PATH=/etc/video-action-recognition/kafka-ca.crt
+                S3_ACCESS_KEY=CHANGEME
+                S3_SECRET_KEY=CHANGEME
+---
+apiVersion: flightctl.io/v1alpha1
+kind: Fleet
+metadata: {name: video-detector-jetson}
+spec:
+  selector:
+    matchLabels: {fleet: video-detector, arch: arm64-jetson}
+  template:
+    spec:
+      os:
+        image: quay.io/CHANGEME/video-action-recognition-os-jetson:latest
+      config:
+        - name: device-identity
+          inline:
+            - path: /etc/video-action-recognition/bus.env
+              content: |
+                BUS_ID={{ .metadata.name }}
+                KAFKA_USERNAME=edge-publisher
+                KAFKA_PASSWORD=CHANGEME
+                KAFKA_CA_PATH=/etc/video-action-recognition/kafka-ca.crt
+                S3_ACCESS_KEY=CHANGEME
+                S3_SECRET_KEY=CHANGEME

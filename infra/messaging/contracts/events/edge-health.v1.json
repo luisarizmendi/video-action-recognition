@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EdgeHealth v1",
+  "description": "Published to topic bus.edge.health every 30 seconds.",
+  "type": "object",
+  "required": ["schema_version", "event_id", "bus_id", "ts", "components", "outbox"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "format": "uuid"},
+    "bus_id": {"type": "string"},
+    "ts": {"type": "string", "format": "date-time"},
+    "components": {
+      "type": "object",
+      "additionalProperties": {"enum": ["ok", "down", "unknown"]}
+    },
+    "outbox": {
+      "type": "object",
+      "properties": {"pending": {"type": "integer"}, "oldest_age_s": {"type": "number"}}
+    }
+  }
+}

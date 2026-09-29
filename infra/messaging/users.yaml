@@ -1,0 +1,29 @@
+# The User Operator creates a Secret per user with the SCRAM password (key: password).
+# Copy the edge-publisher password to the buses (Edge Manager config), one user per bus is better for production.
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: edge-publisher
+  labels: {strimzi.io/cluster: bus-kafka}
+spec:
+  authentication: {type: scram-sha-512}
+  authorization:
+    type: simple
+    acls:
+      - resource: {type: topic, name: bus., patternType: prefix}
+        operations: [Write, Describe]
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: dc-consumers
+  labels: {strimzi.io/cluster: bus-kafka}
+spec:
+  authentication: {type: scram-sha-512}
+  authorization:
+    type: simple
+    acls:
+      - resource: {type: topic, name: bus., patternType: prefix}
+        operations: [Read, Describe]
+      - resource: {type: group, name: bus-, patternType: prefix}
+        operations: [Read]

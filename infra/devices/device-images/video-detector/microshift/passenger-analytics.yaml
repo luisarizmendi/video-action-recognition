@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: passenger-analytics}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: passenger-analytics}}
+  template:
+    metadata: {labels: {app: passenger-analytics}}
+    spec:
+      containers:
+        - name: passenger-analytics
+          image: passenger-analytics
+          env:
+            - {name: ZMQ_SUB_HOST, value: inference-onnx}
+            - {name: CAMERA_ID, value: door-1}
+            - {name: PUBLISHER_URL, value: "http://event-publisher:8080"}
+          ports: [{containerPort: 8080}]

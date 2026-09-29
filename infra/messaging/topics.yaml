@@ -1,0 +1,32 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: bus-safety-events
+  labels: {strimzi.io/cluster: bus-kafka}
+spec:
+  topicName: bus.safety.events
+  partitions: 3
+  replicas: 3
+  config: {retention.ms: "2592000000", min.insync.replicas: "2"}   # 30 days
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: bus-passenger-counts
+  labels: {strimzi.io/cluster: bus-kafka}
+spec:
+  topicName: bus.passenger.counts
+  partitions: 3
+  replicas: 3
+  config: {retention.ms: "604800000", min.insync.replicas: "2"}    # 7 days
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: bus-edge-health
+  labels: {strimzi.io/cluster: bus-kafka}
+spec:
+  topicName: bus.edge.health
+  partitions: 3
+  replicas: 3
+  config: {retention.ms: "86400000", min.insync.replicas: "2"}     # 1 day

@@ -1,0 +1,14 @@
+# Override for laptops with no /dev/video0 (or on macOS/Podman machine, where
+# passing a host device through isn't available the same way). Compose fails
+# to start a container if a `devices:` entry points at a path that does not
+# exist, so this override drops that entry and the video-group settings that
+# go with it. camera-capture then goes straight to the videos/ fallback.
+#
+# Usage:
+#   podman compose -f compose.yaml -f compose.nocam.yaml up -d --build
+# or:
+#   make dev-up-nocam
+services:
+  camera-capture:
+    devices: []
+    group_add: []

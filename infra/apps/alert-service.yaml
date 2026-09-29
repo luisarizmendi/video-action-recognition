@@ -1,0 +1,25 @@
+# Copy the dc-consumers secret and the Kafka cluster CA into video-detection-dc first:
+#   oc get secret dc-consumers -n bus-streams -o yaml | (edit namespace) | oc apply -f -
+#   oc get secret bus-kafka-cluster-ca-cert -n bus-streams -o yaml | (edit namespace) | oc apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: alert-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: alert-service}}
+  template:
+    metadata: {labels: {app: alert-service}}
+    spec:
+      containers:
+        - name: alert-service
+          image: alert-service
+          env:
+            - {name: KAFKA_BOOTSTRAP, value: "bus-kafka-kafka-bootstrap.bus-streams.svc:9093"}
+            - {name: KAFKA_USERNAME, value: dc-consumers}
+            - name: KAFKA_PASSWORD
+              valueFrom: {secretKeyRef: {name: dc-consumers, key: password}}
+            - {name: KAFKA_CA_PATH, value: /certs/ca.crt}
+          volumeMounts: [{name: ca, mountPath: /certs}]
+      volumes:
+        - name: ca
+          secret: {secretName: bus-kafka-cluster-ca-cert}

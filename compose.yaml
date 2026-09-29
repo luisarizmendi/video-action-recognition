@@ -1,0 +1,166 @@
+# Laptop dev stack for the full realtime pipeline.
+#
+#   USB webcam or videos/*.mp4  ──► camera-capture ──► /dev/shm (shared volume)
+#                                        │
+#                                        ▼ ZeroMQ tcp://inference-onnx:5555
+#                                  inference-onnx (CPU build by default)
+#                                        │
+#                       ┌────────────────┼──────────────────┐
+#                       ▼                                    ▼
+#               aggression-detector                 passenger-analytics
+#               (Tier 1 gate, clip-recorder,                 │
+#                MoViNet stub, publish)                      │
+#                       │                                    │
+#                       └───────────────┬────────────────────┘
+#                                        ▼
+#                                 event-publisher ──► kafka (stands in for
+#                                        │             AMQ Streams) + s4
+#                                        ▼
+#                                 ops-dashboard (http://localhost:8080)
+#
+# All inter-service calls use Compose's own DNS (service name = hostname),
+# not host networking, so this runs the same on Linux and macOS. /dev/shm is
+# shared through the named `shm` volume, which is how camera-capture hands
+# frames to inference-onnx, clip-recorder and stream-viewer without a copy.
+#
+# Quick start:
+#   make dev-up
+#   make sim-pax                        # synthetic passenger windows
+#   open http://localhost:8080          # dashboard
+#   open http://localhost:8084          # stream-viewer, bounding boxes
+#   drop an mp4 with two people moving into videos/ to trigger a safety event
+services:
+  kafka:
+    image: docker.io/apache/kafka:3.8.0
+    ports: ["9092:9092"]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:19092,EXTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:19092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  s4:
+    image: quay.io/rh-aiservices-bu/s4:latest
+    ports: ["5000:5000", "7480:7480"]
+    volumes: ["s4-data:/var/lib/ceph/radosgw"]
+
+  camera-capture:
+    build: ./services/camera-capture
+    volumes:
+      - shm:/dev/shm
+      - ./videos:/videos:ro
+    environment:
+      SOURCE_MODE: usb          # falls back to /videos automatically if no camera
+      CAM_TARGET_FPS: "15"
+      VID_DIR: /videos
+      SHM_FRAME_NAME: camera_frame
+      LOG_LEVEL: INFO
+      # For RTSP instead of USB/video:
+      # SOURCE_MODE: rtsp
+      # RTSP_URL: rtsp://your-camera-or-nx-witness/stream
+    devices:
+      - /dev/video0   # comment out if your laptop has no camera; video fallback still works
+    group_add: ["keep-groups"]
+    security_opt: ["label=disable"]
+
+  inference-onnx:
+    # Containerfile's base image includes CUDA but onnxruntime falls back to
+    # CPU automatically (EXECUTION_PROVIDER=auto tries TensorRT, then CUDA,
+    # then CPU), so this also runs fine on a laptop with no GPU — just a
+    # heavier image to pull the first time.
+    build: ./services/inference-onnx
+    depends_on: [camera-capture]
+    volumes:
+      - shm:/dev/shm
+      - ./models:/opt/models:ro
+    environment:
+      SHM_FRAME_NAME: camera_frame
+      ZMQ_PUB_PORT: "5555"
+      INFERENCE_MODEL: model.onnx
+      EXECUTION_PROVIDER: CPUExecutionProvider
+      TARGET_FPS: "10"
+    # Uncomment for an NVIDIA GPU laptop/workstation:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+
+  stream-viewer:
+    build: ./services/stream-viewer
+    depends_on: [inference-onnx]
+    volumes: ["shm:/dev/shm"]
+    environment:
+      SHM_FRAME_NAME: camera_frame
+      ZMQ_SUB_HOST: inference-onnx
+      ZMQ_SUB_PORT: "5555"
+      HTTP_PORT: "8080"
+    ports: ["8084:8080"]
+
+  clip-recorder:
+    build: ./services/clip-recorder
+    depends_on: [camera-capture]
+    volumes:
+      - shm:/dev/shm
+      - clips:/clips
+    environment:
+      SHM_FRAME_NAME: camera_frame
+      CLIP_DIR: /clips
+      PREROLL_S: "5"
+      POSTROLL_S: "3"
+      CALLBACK_URL: "http://aggression-detector:8080/v1/clip-ready"
+    ports: ["8082:8080"]
+
+  aggression-detector:
+    build: ./services/aggression-detector
+    depends_on: [inference-onnx, clip-recorder]
+    environment:
+      ZMQ_SUB_HOST: inference-onnx
+      ZMQ_SUB_PORT: "5555"
+      RECORDER_URL: "http://clip-recorder:8080"
+      PUBLISHER_URL: "http://event-publisher:8080"
+      GATE_PERSONS_MIN: "2"
+      GATE_MOTION_MIN: "4"     # lower than the edge default: laptop test clips move less
+      COOLDOWN_S: "15"
+    ports: ["8081:8080"]
+
+  passenger-analytics:
+    build: ./services/passenger-analytics
+    depends_on: [inference-onnx]
+    environment:
+      ZMQ_SUB_HOST: inference-onnx
+      ZMQ_SUB_PORT: "5555"
+      CAMERA_ID: door-1
+      PUBLISHER_URL: "http://event-publisher:8080"
+      WINDOW_S: "20"
+
+  event-publisher:
+    build: ./services/event-publisher
+    depends_on: [kafka, s4]
+    ports: ["8085:8080"]
+    environment:
+      BUS_ID: laptop-demo
+      KAFKA_BOOTSTRAP: kafka:19092
+      S3_ENDPOINT: http://s4:7480
+      S3_BUCKET: bus-evidence
+      OUTBOX_PATH: /var/lib/outbox/outbox.db
+      BUS_ENV_FILE: /nonexistent
+    volumes: ["clips:/clips", "outbox:/var/lib/outbox"]
+
+  ops-dashboard:
+    build: ./services/ops-dashboard
+    depends_on: [kafka]
+    ports: ["8080:8080"]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:19092
+      S3_ENDPOINT: http://s4:7480
+      S3_PUBLIC_ENDPOINT: http://localhost:7480
+
+volumes: {s4-data: {}, shm: {}, clips: {}, outbox: {}}

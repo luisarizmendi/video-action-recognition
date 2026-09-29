@@ -1,0 +1,22 @@
+# Optional: MicroShift instead of plain Podman + Quadlets for this device.
+# MicroShift applies this directory at boot from /etc/microshift/manifests.d/video-detector/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: video-detector
+resources:
+  - namespace.yaml
+  - storage.yaml
+  - configmap.yaml
+  - camera-capture.yaml
+  - inference-onnx.yaml
+  - clip-recorder.yaml
+  - aggression-detector.yaml
+  - passenger-analytics.yaml
+  - event-publisher.yaml
+images:
+  - {name: camera-capture, newName: quay.io/CHANGEME/video-action-recognition-camera-capture, newTag: latest}
+  - {name: inference-onnx, newName: quay.io/CHANGEME/video-action-recognition-inference-onnx, newTag: latest}
+  - {name: clip-recorder, newName: quay.io/CHANGEME/video-action-recognition-clip-recorder, newTag: latest}
+  - {name: aggression-detector, newName: quay.io/CHANGEME/video-action-recognition-aggression-detector, newTag: latest}
+  - {name: passenger-analytics, newName: quay.io/CHANGEME/video-action-recognition-passenger-analytics, newTag: latest}
+  - {name: event-publisher, newName: quay.io/CHANGEME/video-action-recognition-event-publisher, newTag: latest}

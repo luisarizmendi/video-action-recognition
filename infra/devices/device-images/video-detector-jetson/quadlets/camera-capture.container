@@ -1,0 +1,43 @@
+# ~/.config/containers/systemd/camera-capture.container
+# or /etc/containers/systemd/camera-capture.container (system-wide)
+#
+# USB auto-detect by default. For RTSP (e.g. from Nx Witness), set
+# SOURCE_MODE=rtsp and RTSP_URL, and drop the AddDevice=/dev/video0 line.
+
+[Unit]
+Description=Camera Capture — USB cam, RTSP, or video fallback → shared memory
+After=network.target
+
+[Container]
+Image=quay.io/CHANGEME/video-action-recognition-camera-capture:latest
+ContainerName=camera-capture
+
+# 39 is the video group id on most systems. Check with: getent group video
+UserNS=keep-id:uid=1000,gid=39
+PodmanArgs=--group-add=keep-groups
+
+Volume=/dev/shm:/dev/shm
+Volume=/var/home/detector/videos:/videos:ro
+
+# USB mode only. Comment out for RTSP.
+AddDevice=/dev/video0
+
+Network=host
+SecurityLabelDisable=true
+
+Environment=SOURCE_MODE=usb
+# Environment=SOURCE_MODE=rtsp
+# Environment=RTSP_URL=rtsp://nx-witness:7001/CHANGEME-camera-id
+Environment=CAM_TARGET_FPS=30
+Environment=DEVICE_PROBE_TIMEOUT=15
+Environment=VID_DIR=/videos
+Environment=SHM_FRAME_NAME=camera_frame
+Environment=VIEWER_JPEG_QUALITY=80
+Environment=LOG_LEVEL=INFO
+
+[Service]
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

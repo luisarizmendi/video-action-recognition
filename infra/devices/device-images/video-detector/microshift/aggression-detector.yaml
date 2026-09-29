@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: aggression-detector}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: aggression-detector}}
+  template:
+    metadata: {labels: {app: aggression-detector}}
+    spec:
+      containers:
+        - name: aggression-detector
+          image: aggression-detector
+          env:
+            - {name: ZMQ_SUB_HOST, value: inference-onnx}
+            - {name: RECORDER_URL, value: "http://clip-recorder:8080"}
+            - {name: PUBLISHER_URL, value: "http://event-publisher:8080"}
+          ports: [{containerPort: 8080}]
+          readinessProbe: {httpGet: {path: /healthz, port: 8080}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: aggression-detector}
+spec: {selector: {app: aggression-detector}, ports: [{port: 8080, targetPort: 8080}]}

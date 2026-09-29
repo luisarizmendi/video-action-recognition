@@ -1,0 +1,41 @@
+# ~/.config/containers/systemd/inference-onnx.container
+#
+# Run only ONE inference-* quadlet at a time — all publish on the same
+# ZeroMQ port (5555). For desktop/server NVIDIA GPU use inference-tensorrt
+# instead; for Jetson use the video-detector-jetson device image.
+
+[Unit]
+Description=ONNX Inference — SHM frames → ZeroMQ detections (CPU or CUDA EP)
+After=camera-capture.service
+Requires=camera-capture.service
+
+[Container]
+Image=quay.io/CHANGEME/video-action-recognition-inference-onnx:latest
+ContainerName=inference-onnx
+PullPolicy=missing
+
+Volume=/dev/shm:/dev/shm
+Volume=/var/home/detector/models:/opt/models:ro
+
+Network=host
+SecurityLabelDisable=true
+
+# Uncomment for NVIDIA GPU via CDI:
+# AddDevice=nvidia.com/gpu=all
+
+Environment=SHM_FRAME_NAME=camera_frame
+Environment=ZMQ_PUB_PORT=5555
+Environment=ZMQ_TOPIC=detections
+Environment=INFERENCE_MODEL=model.onnx
+Environment=MODELS_DIR=/opt/models
+Environment=CONFIDENCE_THRESH=0.4
+Environment=TARGET_FPS=30
+Environment=EXECUTION_PROVIDER=auto
+Environment=LOG_LEVEL=INFO
+
+[Service]
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target
