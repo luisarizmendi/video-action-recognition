@@ -6,7 +6,7 @@ After=camera-capture.service
 Requires=camera-capture.service
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-stream-viewer:latest
+Image=quay.io/luisarizmendi/video-action-recognition-stream-viewer:latest
 ContainerName=stream-viewer
 
 Volume=/dev/shm:/dev/shm

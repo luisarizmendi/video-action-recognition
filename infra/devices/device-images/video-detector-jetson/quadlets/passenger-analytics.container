@@ -4,7 +4,7 @@ After=inference-tensorrt-jetson.service
 Requires=inference-tensorrt-jetson.service
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-passenger-analytics:latest
+Image=quay.io/luisarizmendi/video-action-recognition-passenger-analytics:latest
 ContainerName=passenger-analytics
 
 Network=host

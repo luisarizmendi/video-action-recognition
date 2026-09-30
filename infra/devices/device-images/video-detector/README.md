@@ -11,7 +11,7 @@ camera-capture ──► inference-onnx ──► aggression-detector ──► 
 
 ## Build and enroll
 ```bash
-podman build -f Containerfile -t quay.io/CHANGEME/video-action-recognition-os:latest ../../../..
+podman build -f Containerfile -t quay.io/luisarizmendi/video-action-recognition-os:latest ../../../..
 ```
 Enroll the built image with Red Hat Edge Manager (see `../../device-management/`),
 or `bootc switch` it directly on a test box.
@@ -40,7 +40,7 @@ other, not both, on the same box.
 
 ## Known work items
 - GPU: NVIDIA driver + CDI in the bootc image if you are not on pure CPU ONNX.
-- Pull secret for `quay.io/CHANGEME` in `/etc/containers/registries.conf`.
+- Pull secret for `quay.io/luisarizmendi` in `/etc/containers/registries.conf`.
 - `RTSP_URL` in `camera-capture.container` if the source is a VMS (e.g. Nx Witness)
   instead of a USB camera.
 - Kafka/S3 endpoints and credentials for event-publisher: see

@@ -6,7 +6,7 @@ TESTED_SERVICES = services/camera-capture services/clip-recorder services/aggres
                    services/passenger-analytics services/event-publisher \
                    services/alert-service services/ops-dashboard
 
-.PHONY: test dev-up dev-up-nocam dev-down dev-logs sim-pax bucket edge-os edge-os-jetson
+.PHONY: test dev-up dev-up-cam dev-down dev-logs sim-pax bucket edge-os edge-os-jetson
 
 test:
 	@for d in $(TESTED_SERVICES); do echo "== $$d"; (cd $$d && python -m pytest -q tests) || exit 1; done
@@ -14,17 +14,27 @@ test:
 dev-up:
 	$(ENGINE) compose up -d --build
 	@echo ""
+	@echo "No camera device is passed through, so camera-capture loops videos/*.mp4."
 	@echo "First run only, create the S4 bucket:  make bucket"
 	@echo "Dashboard:       http://localhost:8080"
 	@echo "Stream viewer:   http://localhost:8084"
-	@echo "No webcam?       make dev-down && make dev-up-nocam"
+	@echo "Real USB webcam? make dev-down && make dev-up-cam"
 
-dev-up-nocam:
-	$(ENGINE) compose -f compose.yaml -f compose.nocam.yaml up -d --build
-	@echo "camera-capture will loop videos/*.mp4 instead of a USB camera."
+dev-up-cam:
+	$(ENGINE) compose -f compose.yaml -f compose.cam.yaml up -d --build
+	@echo ""
+	@echo "--------------------------------------"
+	@echo "DONE!"
+	@echo "--------------------------------------"
+	@echo "Dashboard:       http://localhost:8080"
+	@echo "Stream viewer:   http://localhost:8084"
 
 dev-down:
 	$(ENGINE) compose down
+
+dev-clean:
+	$(ENGINE) compose down --remove-orphans && \
+	$(ENGINE) image ls --format '{{.Repository}}:{{.Tag}}' | grep '^docker.io/library/video-action-recognition-' | xargs -r podman image rm
 
 dev-logs:
 	$(ENGINE) compose logs -f aggression-detector passenger-analytics event-publisher
@@ -38,9 +48,9 @@ sim-pax:
 
 edge-os:
 	$(ENGINE) build -f infra/devices/device-images/video-detector/Containerfile \
-	  -t quay.io/CHANGEME/video-action-recognition-os:latest .
+	  -t quay.io/CHANGEME/action-video-detection-os:latest .
 
 edge-os-jetson:
 	$(ENGINE) build --platform linux/arm64 \
 	  -f infra/devices/device-images/video-detector-jetson/Containerfile \
-	  -t quay.io/CHANGEME/video-action-recognition-os-jetson:latest .
+	  -t quay.io/CHANGEME/action-video-detection-os-jetson:latest .

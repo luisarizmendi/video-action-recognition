@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-event-publisher:latest
+Image=quay.io/luisarizmendi/video-action-recognition-event-publisher:latest
 ContainerName=event-publisher
 
 Volume=/var/home/detector/outbox:/var/lib/outbox

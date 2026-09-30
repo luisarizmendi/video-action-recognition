@@ -1,0 +1,20 @@
+# Opt-in: pass a real USB webcam through to camera-capture.
+#
+# No group_add needed here: the camera-capture image runs as root (its
+# Containerfile has no USER directive), and root already has access to
+# /dev/video0 through ownership, without needing video-group membership.
+# `group_add: ["keep-groups"]` (what the Quadlets use, for a rootless,
+# non-root setup) is Podman-CLI magic that only works when Podman itself
+# starts the container; `podman compose` hands off to docker-compose, which
+# talks to Podman's Docker-API-compatible socket, and that layer does not
+# understand the magic value — it tries to look up a literal group called
+# "keep-groups" and fails, which is the error this file avoids entirely.
+#
+# Usage:
+#   podman compose -f compose.yaml -f compose.cam.yaml up -d --build
+# or:
+#   make dev-up-cam
+services:
+  camera-capture:
+    devices:
+      - /dev/video2

@@ -4,7 +4,7 @@ After=inference-tensorrt-jetson.service clip-recorder.service
 Requires=inference-tensorrt-jetson.service clip-recorder.service
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-aggression-detector:latest
+Image=quay.io/luisarizmendi/video-action-recognition-aggression-detector:latest
 ContainerName=aggression-detector
 
 Network=host

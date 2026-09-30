@@ -10,7 +10,7 @@ After=camera-capture.service
 Requires=camera-capture.service
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-inference-onnx:latest
+Image=quay.io/luisarizmendi/video-action-recognition-inference-onnx:latest
 ContainerName=inference-onnx
 PullPolicy=missing
 

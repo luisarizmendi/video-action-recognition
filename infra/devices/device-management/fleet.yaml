@@ -7,7 +7,7 @@ kind: Repository
 metadata: {name: video-action-recognition-git}
 spec:
   type: git
-  url: https://github.com/CHANGEME/video-action-recognition.git
+  url: https://github.com/luisarizmendi/video-action-recognition.git
 ---
 apiVersion: flightctl.io/v1alpha1
 kind: Fleet
@@ -18,7 +18,7 @@ spec:
   template:
     spec:
       os:
-        image: quay.io/CHANGEME/video-action-recognition-os:latest
+        image: quay.io/luisarizmendi/video-action-recognition-os:latest
       config:
         - name: device-identity
           inline:
@@ -40,7 +40,7 @@ spec:
   template:
     spec:
       os:
-        image: quay.io/CHANGEME/video-action-recognition-os-jetson:latest
+        image: quay.io/luisarizmendi/video-action-recognition-os-jetson:latest
       config:
         - name: device-identity
           inline:

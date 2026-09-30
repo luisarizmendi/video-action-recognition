@@ -57,7 +57,19 @@ Nothing here was run on real hardware (a bus, a Jetson, a MicroShift cluster). T
 stack is the only part actually exercised end to end (build + unit tests), and even that
 needs a camera or a video file to see a full event.
 
+
+
+
+
+
 ## Try it on a laptop
+
+
+
+need systemctl --user enable --now podman.socket 
+
+
+
 ```bash
 make dev-up            # has a /dev/video0? this uses it
 # or, no webcam:

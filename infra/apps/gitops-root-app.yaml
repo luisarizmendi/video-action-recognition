@@ -4,7 +4,7 @@ kind: Application
 metadata: {name: video-detection-streams, namespace: openshift-gitops}
 spec:
   project: default
-  source: {repoURL: "https://github.com/CHANGEME/video-action-recognition.git", targetRevision: main, path: infra/messaging}
+  source: {repoURL: "https://github.com/luisarizmendi/video-action-recognition.git", targetRevision: main, path: infra/messaging}
   destination: {server: "https://kubernetes.default.svc", namespace: bus-streams}
   syncPolicy: {automated: {prune: true, selfHeal: true}, syncOptions: [CreateNamespace=true]}
 ---
@@ -13,6 +13,6 @@ kind: Application
 metadata: {name: video-detection-apps, namespace: openshift-gitops}
 spec:
   project: default
-  source: {repoURL: "https://github.com/CHANGEME/video-action-recognition.git", targetRevision: main, path: infra/apps}
+  source: {repoURL: "https://github.com/luisarizmendi/video-action-recognition.git", targetRevision: main, path: infra/apps}
   destination: {server: "https://kubernetes.default.svc", namespace: video-detection-dc}
   syncPolicy: {automated: {prune: true, selfHeal: true}, syncOptions: [CreateNamespace=true]}

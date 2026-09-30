@@ -4,7 +4,7 @@
 #
 # Build (context is the repo root):
 #   podman build -f infra/devices/device-images/video-detector/Containerfile \
-#     -t quay.io/CHANGEME/video-action-recognition-os:latest .
+#     -t quay.io/luisarizmendi/video-action-recognition-os:latest .
 FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
 # TODO: enable the repos you need at build time (rhel-9-baseos/appstream,
@@ -16,7 +16,7 @@ RUN dnf install -y podman v4l-utils ffmpeg && dnf clean all
 
 COPY infra/devices/device-images/video-detector/quadlets/ /etc/containers/systemd/
 
-# TODO: /etc/containers/registries.conf pull secret for quay.io/CHANGEME
+# TODO: /etc/containers/registries.conf pull secret for quay.io/luisarizmendi
 RUN mkdir -p /var/home/detector/videos /var/home/detector/models \
              /var/home/detector/clips /var/home/detector/outbox /etc/video-action-recognition
 LABEL containers.bootc=1

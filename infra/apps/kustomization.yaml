@@ -3,5 +3,5 @@ kind: Kustomization
 namespace: video-detection-dc
 resources: [namespace.yaml, alert-service.yaml, ops-dashboard.yaml]
 images:
-  - {name: alert-service, newName: quay.io/CHANGEME/video-action-recognition-alert-service, newTag: latest}
-  - {name: ops-dashboard, newName: quay.io/CHANGEME/video-action-recognition-ops-dashboard, newTag: latest}
+  - {name: alert-service, newName: quay.io/luisarizmendi/video-action-recognition-alert-service, newTag: latest}
+  - {name: ops-dashboard, newName: quay.io/luisarizmendi/video-action-recognition-ops-dashboard, newTag: latest}

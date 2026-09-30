@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir \
         numpy
 
 WORKDIR /app
-COPY server.py shm_frame.py ./
-COPY static/ ./static/
+COPY src/server.py src/shm_frame.py ./
+COPY src/static/ ./static/
 
 CMD ["python3", "-u", "server.py"]

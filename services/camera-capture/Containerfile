@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir opencv-python-headless
 
 WORKDIR /app
-COPY capture.py shm_frame.py ./
+COPY src/capture.py src/shm_frame.py ./
 
 RUN mkdir -p /videos
 

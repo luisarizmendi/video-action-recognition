@@ -23,7 +23,7 @@ def package_modelcar(model: dsl.Input[dsl.Model], image: str):
 
 
 @dsl.pipeline(name="aggression-model")
-def aggression_pipeline(dataset_bucket: str = "bus-training", image: str = "quay.io/CHANGEME/movinet-a0:latest"):
+def aggression_pipeline(dataset_bucket: str = "bus-training", image: str = "quay.io/luisarizmendi/movinet-a0:latest"):
     t = train(dataset_bucket=dataset_bucket)
     e = evaluate(model=t.outputs["model_out"])
     package_modelcar(model=t.outputs["model_out"], image=image).after(e)

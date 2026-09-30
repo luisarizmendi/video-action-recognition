@@ -6,7 +6,7 @@ on the Jetson.
 
 ```bash
 podman build --platform linux/arm64 -f Containerfile \
-  -t quay.io/CHANGEME/video-action-recognition-os-jetson:latest ../../../..
+  -t quay.io/luisarizmendi/video-action-recognition-os-jetson:latest ../../../..
 ```
 
 For the Jetson-specific base layer (L4T userspace, JetPack packages), follow

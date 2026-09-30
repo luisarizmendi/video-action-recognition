@@ -26,7 +26,7 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
         numpy
 
 WORKDIR /app
-COPY inference.py shm_frame.py ./
+COPY src/inference.py src/shm_frame.py ./
 
 RUN mkdir -p /opt/models
 

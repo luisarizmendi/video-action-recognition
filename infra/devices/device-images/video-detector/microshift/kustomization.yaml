@@ -14,9 +14,9 @@ resources:
   - passenger-analytics.yaml
   - event-publisher.yaml
 images:
-  - {name: camera-capture, newName: quay.io/CHANGEME/video-action-recognition-camera-capture, newTag: latest}
-  - {name: inference-onnx, newName: quay.io/CHANGEME/video-action-recognition-inference-onnx, newTag: latest}
-  - {name: clip-recorder, newName: quay.io/CHANGEME/video-action-recognition-clip-recorder, newTag: latest}
-  - {name: aggression-detector, newName: quay.io/CHANGEME/video-action-recognition-aggression-detector, newTag: latest}
-  - {name: passenger-analytics, newName: quay.io/CHANGEME/video-action-recognition-passenger-analytics, newTag: latest}
-  - {name: event-publisher, newName: quay.io/CHANGEME/video-action-recognition-event-publisher, newTag: latest}
+  - {name: camera-capture, newName: quay.io/luisarizmendi/video-action-recognition-camera-capture, newTag: latest}
+  - {name: inference-onnx, newName: quay.io/luisarizmendi/video-action-recognition-inference-onnx, newTag: latest}
+  - {name: clip-recorder, newName: quay.io/luisarizmendi/video-action-recognition-clip-recorder, newTag: latest}
+  - {name: aggression-detector, newName: quay.io/luisarizmendi/video-action-recognition-aggression-detector, newTag: latest}
+  - {name: passenger-analytics, newName: quay.io/luisarizmendi/video-action-recognition-passenger-analytics, newTag: latest}
+  - {name: event-publisher, newName: quay.io/luisarizmendi/video-action-recognition-event-publisher, newTag: latest}

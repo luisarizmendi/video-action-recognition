@@ -13,7 +13,7 @@
 # Build must run on aarch64 (or with cross-arch emulation):
 #   podman build --platform linux/arm64 \
 #     -f infra/devices/device-images/video-detector-jetson/Containerfile \
-#     -t quay.io/CHANGEME/video-action-recognition-os-jetson:latest .
+#     -t quay.io/luisarizmendi/video-action-recognition-os-jetson:latest .
 FROM registry.redhat.io/rhel9/rhel-bootc:latest
 
 # TODO: layer in the Jetson/L4T userspace and JetPack packages, following

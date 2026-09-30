@@ -9,7 +9,7 @@ Description=Camera Capture — USB cam, RTSP, or video fallback → shared memor
 After=network.target
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-camera-capture:latest
+Image=quay.io/luisarizmendi/video-action-recognition-camera-capture:latest
 ContainerName=camera-capture
 
 # 39 is the video group id on most systems. Check with: getent group video

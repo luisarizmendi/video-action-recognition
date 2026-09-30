@@ -4,7 +4,7 @@ After=camera-capture.service
 Requires=camera-capture.service
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-clip-recorder:latest
+Image=quay.io/luisarizmendi/video-action-recognition-clip-recorder:latest
 ContainerName=clip-recorder
 
 Volume=/dev/shm:/dev/shm

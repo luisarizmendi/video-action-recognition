@@ -37,7 +37,7 @@ RUN pip3 install --no-cache-dir \
         onnxruntime
 
 WORKDIR /app
-COPY inference.py shm_frame.py ./
+COPY src/inference.py src/shm_frame.py ./
 
 RUN mkdir -p /opt/models
 

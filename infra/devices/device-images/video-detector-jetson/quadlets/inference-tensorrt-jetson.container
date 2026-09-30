@@ -12,7 +12,7 @@ After=camera-capture.service
 Requires=camera-capture.service
 
 [Container]
-Image=quay.io/CHANGEME/video-action-recognition-inference-tensorrt-jetson:latest
+Image=quay.io/luisarizmendi/video-action-recognition-inference-tensorrt-jetson:latest
 ContainerName=inference-tensorrt-jetson
 PodmanArgs=--group-add=keep-groups
 

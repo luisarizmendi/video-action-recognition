@@ -53,7 +53,8 @@ services:
     volumes: ["s4-data:/var/lib/ceph/radosgw"]
 
   camera-capture:
-    build: ./services/camera-capture
+    image: video-action-recognition-camera-capture:latest
+    build: {context: ./services/camera-capture, dockerfile: Containerfile}
     volumes:
       - shm:/dev/shm
       - ./videos:/videos:ro
@@ -66,21 +67,24 @@ services:
       # For RTSP instead of USB/video:
       # SOURCE_MODE: rtsp
       # RTSP_URL: rtsp://your-camera-or-nx-witness/stream
-    devices:
-      - /dev/video0   # comment out if your laptop has no camera; video fallback still works
-    group_add: ["keep-groups"]
     security_opt: ["label=disable"]
+    # No /dev/video0 passthrough here on purpose: with none mapped, USB
+    # auto-detect finds nothing and camera-capture falls back to videos/
+    # automatically, so this runs out of the box on any laptop. To try a
+    # real USB webcam instead, see compose.cam.yaml.
 
   inference-onnx:
     # Containerfile's base image includes CUDA but onnxruntime falls back to
     # CPU automatically (EXECUTION_PROVIDER=auto tries TensorRT, then CUDA,
     # then CPU), so this also runs fine on a laptop with no GPU — just a
     # heavier image to pull the first time.
-    build: ./services/inference-onnx
+    image: video-action-recognition-inference-onnx:latest
+    build: {context: ./services/inference-onnx, dockerfile: Containerfile}
+    #entrypoint: ["/bin/sleep", "9999"]
     depends_on: [camera-capture]
     volumes:
       - shm:/dev/shm
-      - ./models:/opt/models:ro
+      - ./models:/opt/models:ro,z
     environment:
       SHM_FRAME_NAME: camera_frame
       ZMQ_PUB_PORT: "5555"
@@ -94,7 +98,8 @@ services:
     #       devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
 
   stream-viewer:
-    build: ./services/stream-viewer
+    image: video-action-recognition-stream-viewer:latest
+    build: {context: ./services/stream-viewer, dockerfile: Containerfile}
     depends_on: [inference-onnx]
     volumes: ["shm:/dev/shm"]
     environment:
@@ -105,11 +110,12 @@ services:
     ports: ["8084:8080"]
 
   clip-recorder:
-    build: ./services/clip-recorder
+    image: video-action-recognition-clip-recorder:latest
+    build: {context: ./services/clip-recorder, dockerfile: Containerfile}
     depends_on: [camera-capture]
     volumes:
       - shm:/dev/shm
-      - clips:/clips
+      - clips:/clips:rw,z
     environment:
       SHM_FRAME_NAME: camera_frame
       CLIP_DIR: /clips
@@ -119,7 +125,8 @@ services:
     ports: ["8082:8080"]
 
   aggression-detector:
-    build: ./services/aggression-detector
+    image: video-action-recognition-aggression-detector:latest
+    build: {context: ./services/aggression-detector, dockerfile: Containerfile}
     depends_on: [inference-onnx, clip-recorder]
     environment:
       ZMQ_SUB_HOST: inference-onnx
@@ -132,7 +139,8 @@ services:
     ports: ["8081:8080"]
 
   passenger-analytics:
-    build: ./services/passenger-analytics
+    image: video-action-recognition-passenger-analytics:latest
+    build: {context: ./services/passenger-analytics, dockerfile: Containerfile}
     depends_on: [inference-onnx]
     environment:
       ZMQ_SUB_HOST: inference-onnx
@@ -142,7 +150,7 @@ services:
       WINDOW_S: "20"
 
   event-publisher:
-    build: ./services/event-publisher
+    build: {context: ./services/event-publisher, dockerfile: Containerfile}
     depends_on: [kafka, s4]
     ports: ["8085:8080"]
     environment:
@@ -155,7 +163,7 @@ services:
     volumes: ["clips:/clips", "outbox:/var/lib/outbox"]
 
   ops-dashboard:
-    build: ./services/ops-dashboard
+    build: {context: ./services/ops-dashboard, dockerfile: Containerfile}
     depends_on: [kafka]
     ports: ["8080:8080"]
     environment:
